@@ -1,4 +1,4 @@
-package edu.umro.EventNetClient
+package edu.umro.EventNetClientTest
 
 import com.rabbitmq.client.Connection
 
@@ -6,7 +6,7 @@ import com.rabbitmq.client.Connection
  * Send PrintPDF test message.
  */
 
-object SendText {
+object SendTestToPrintPDF {
 
   //  private val config = EventNetClientConfig.construct(host, port)
   //
@@ -44,6 +44,24 @@ object SendText {
     <Plan>0</Plan>
     <Host>REMUS</Host>
     <Directory>$1$DGA1103:[IRRER]</Directory>
+    <Destination>E:\Program Files\UMRO\PrintPDF\PrintPDF2-2.0.2\tmp\foo.pdf</Destination>
+  </MetaData>
+  <FileList>
+    <File>TEST3D_01_DVH.TXT</File>
+    <File>SMITH307_01_PSOUT.PS</File>
+  </FileList>
+</Event>
+"""
+
+  private val CprintPdfTestEvent =
+    """<Event type="UMRO.UMPLAN.PrintPDF">
+  <MetaData>
+    <JobID/>
+    <User>Irrer</User>
+    <Nickname>NickName2</Nickname>
+    <Plan>0</Plan>
+    <Host>REMUS</Host>
+    <Directory>$1$DGA1103:[IRRER]</Directory>
     <Destination>C:\Program Files\UMRO\PrintPDF2-2.0.1\tmp\foo.pdf</Destination>
   </MetaData>
   <FileList>
@@ -56,9 +74,13 @@ object SendText {
   def main(args: Array[String]): Unit = {
     println("Starting ...")
 
-    // "141.214.124.176" // "rodicom11cet" // "rodicom11prod" // "rodicom11dev" //  "localhost" // "10.30.3.90" // "uhroappwebsdv1" // "rodicom11cet" //
+    // "141.214.124.176" // "rodicom11cet" // "rodicom11prod" // "rodicom11dev" //  "localhost" // "10.30.3.90" // "uhroappwebsdv1" // "rodicom11cet" // "172.20.125.28"
 
-    val host = "172.20.125.28"
+    val host = {
+      val env = System.getenv("AMQPBrokerHost")
+      if (env != null) env
+      else "localhost"
+    }
     val port = 5672
     val exchange = ""
     val routingKey = "UMRO.UMPlan.PrintPDF"
