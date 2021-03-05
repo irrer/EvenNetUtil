@@ -145,9 +145,9 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
 
   /**
    * Create the QueueingConsumer and execute the application's event processor in a loop.
-   * 
+   *
    * Isolate exceptions from the application processing from exceptions from the AMQP calls.
-   * 
+   *
    * If <code>processing</code> throws an exception, mark the incoming message as
    * not-acknowledged and re-queue it. 
    */
@@ -188,13 +188,14 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
 
     channel.basicConsume(queueName, autoAck, new Deliver, new Cancel)
 
-    //    class ConsumeForever extends Runnable {
-    //      def run: Unit = {
-    //        channel.basicConsume(queueName, true, consumer)
-    //      }
-    //    }
-    //
-    //    (new Thread(new ConsumeForever)).start
+    /* TODO In the event that this is used before being properly implemented, this code is a
+     * safeguard to prevent going into an infinite loop and consuming lots of CPU.  This
+     * should be removed when the code is made to work.
+     */
+    if (true) {
+      println("the consumeLoop " + System.currentTimeMillis())
+      Thread.sleep(1000)
+    }
   }
 
   private class RunLoop(queueName: String, processing: Array[Byte] => Unit) extends Runnable {

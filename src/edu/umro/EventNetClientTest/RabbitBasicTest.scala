@@ -65,7 +65,7 @@ object RabbitBasicTest {
       println("cancelCallback s: " + s)
     }
 
-    channel.basicConsume(QUEUE_NAME, true, deliverCallback, cancelCallback)
+    channel.basicConsume(QUEUE_NAME, false, deliverCallback, cancelCallback)
   }
 
   def main(args: Array[String]): Unit = {

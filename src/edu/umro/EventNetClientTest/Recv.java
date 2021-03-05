@@ -1,13 +1,21 @@
 package edu.umro.EventNetClientTest;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.*;
 
-public class Recv {
+import java.io.IOException;
+
+public class Recv implements DeliverCallback {
 
     private final static String QUEUE_NAME = "hello";
+
+    static long start = System.currentTimeMillis();
+
+    @Override
+    public void handle(String consumerTag, Delivery message) throws IOException {
+        String text = new String(message.getBody(), "UTF-8");
+        long elapsed = System.currentTimeMillis() - start;
+        System.out.println(elapsed + " Received '" + text + "'");
+    }
 
     public static void main(String[] argv) throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
@@ -18,13 +26,9 @@ public class Recv {
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
         System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
-        long start = System.currentTimeMillis();
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), "UTF-8");
-            long elapsed = System.currentTimeMillis() - start;
-            System.out.println(elapsed + " Received '" + message + "'");
-        };
-        channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {
-        });
+        /*
+        channel.basicConsume(QUEUE_NAME, true, new Recv(), new Send());
+         */
+
     }
 }
