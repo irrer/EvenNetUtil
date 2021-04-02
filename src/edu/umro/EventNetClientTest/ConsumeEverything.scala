@@ -19,11 +19,11 @@ object ConsumeEverything {
     val exchangeName = "gbtopic"
 
     if (false) {
-      val fctry = new ConnectionFactory
-      fctry.setHost("localhost")
-      fctry.setPort(5672)
-      val cnct = fctry.newConnection
-      val channel = cnct.createChannel
+      val factory = new ConnectionFactory
+      factory.setHost("localhost")
+      factory.setPort(5672)
+      val connection = factory.newConnection
+      val channel = connection.createChannel
 
       /*
        *
@@ -61,7 +61,7 @@ object ConsumeEverything {
     println("44")
     Thread.sleep(100 * 1000L)
     println("44a")
-    for (i <- (1 to 40)) {
+    for (_ <- 1 to 40) {
       println("55")
       Thread.sleep(10 * 1000L)
       println("55a")

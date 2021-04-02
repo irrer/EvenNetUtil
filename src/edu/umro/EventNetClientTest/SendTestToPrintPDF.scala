@@ -3,8 +3,8 @@ package edu.umro.EventNetClientTest
 import com.rabbitmq.client.Connection
 
 /**
- * Send PrintPDF test message.
- */
+  * Send PrintPDF test message.
+  */
 
 object SendTestToPrintPDF {
 
@@ -12,12 +12,12 @@ object SendTestToPrintPDF {
   //
   //  private val eventUtil = new EventUtil(config, 2, 10 * 1000)
 
-  def createConnection(host: String, port: Int) = {
+  def createConnection(host: String, port: Int): Connection = {
     val factory = new com.rabbitmq.client.ConnectionFactory
     factory.setUsername("eventnet")
     factory.setPassword("waygranted")
-    val cp = factory.getClientProperties();
-    val props = cp.keySet.toArray.map(k => (k.toString + "=" + cp.get(k)))
+    val cp = factory.getClientProperties
+    val props = cp.keySet.toArray.map(k => k.toString + "=" + cp.get(k))
     println("Client Properties: " + props.mkString("\n    ", "\n    ", "\n    "))
     println("Constructing AMQP connection RabbitMQ broker at " + host + ":" + port)
     factory.setHost(host)
@@ -102,10 +102,9 @@ object SendTestToPrintPDF {
       Thread.sleep(3 * 1000L)
       println("Done.  Exiting.")
     } catch {
-      case t: Throwable => {
+      case t: Throwable =>
         println("Unexpected exception in SendTestToPrintPDF")
-        t.printStackTrace
-      }
+        t.printStackTrace()
     }
     System.exit(0)
   }

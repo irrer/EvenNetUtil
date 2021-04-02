@@ -1,5 +1,5 @@
 package edu.umro.EventNetClient
 
 class AgentIdentification(val AgentName: String) {
-    val AgentId = Util.makeUID
+  val AgentId: String = Util.makeUID
 }

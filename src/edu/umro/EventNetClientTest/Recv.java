@@ -2,7 +2,7 @@ package edu.umro.EventNetClientTest;
 
 import com.rabbitmq.client.*;
 
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class Recv implements DeliverCallback {
 
@@ -11,8 +11,8 @@ public class Recv implements DeliverCallback {
     static long start = System.currentTimeMillis();
 
     @Override
-    public void handle(String consumerTag, Delivery message) throws IOException {
-        String text = new String(message.getBody(), "UTF-8");
+    public void handle(String consumerTag, Delivery message) {
+        String text = new String(message.getBody(), StandardCharsets.UTF_8);
         long elapsed = System.currentTimeMillis() - start;
         System.out.println(elapsed + " Received '" + text + "'");
     }

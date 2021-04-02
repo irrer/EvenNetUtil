@@ -1,98 +1,91 @@
 package edu.umro.EventNetClient
 
-import com.rabbitmq.client.Channel
-import com.rabbitmq.client.Connection
-import com.rabbitmq.client.ConnectionFactory
-import java.util.logging.Logger
-import java.util.concurrent.LinkedBlockingQueue
+import com.rabbitmq.client._
 import resource.managed
+
 import java.io.Closeable
-import java.util.HashSet
-import com.rabbitmq.client.DefaultConsumer
-import com.rabbitmq.client.Delivery
-import com.rabbitmq.client.CancelCallback
-import com.rabbitmq.client.DeliverCallback
+import java.util
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.logging.Logger
 
 class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs: Long) {
 
-  private val log = Logger.getLogger(this.getClass.getName())
+  private val log = Logger.getLogger(this.getClass.getName)
 
   /** All channels declared at start and kept here. */
   private val channelList = new LinkedBlockingQueue[Channel]
 
-  private case class QueueNameRoutingKeyPair(val queueName: String, val routingKey: String)
+  private case class QueueNameRoutingKeyPair(queueName: String, routingKey: String)
 
-  private val establishedList = new HashSet[QueueNameRoutingKeyPair]
+  private val establishedList = new util.HashSet[QueueNameRoutingKeyPair]
 
   private class ManagedChannel extends Closeable {
 
     /** Referenced by callers. */
-    val channel = take
+    val channel: Channel = take
 
-    override def close: Unit = {
+    override def close(): Unit = {
       put(channel)
     }
   }
 
   def sendAdminEvent(event: Event): Unit = {
     log.fine("Sending admin event:\n" + event)
-    def sendEvent(channel: Channel) =
+    def sendEvent(channel: Channel): Unit =
       channel.basicPublish(config.AdminExchange, config.RoutingKeyPrefix + event.eventName, null, event.toText.getBytes())
-    performSafelyUsingChannel(sendEvent(_))
+    performSafelyUsingChannel(sendEvent)
     // printf("Sent admin event:\n" + event)
   }
 
   def performSafelyUsingChannel[T](func: Channel => T): Option[T] = {
-    managed(new ManagedChannel) acquireAndGet {
-      manChan =>
-        {
-          try {
-            Some(func(manChan.channel))
-          } catch {
-            case e: Exception =>
-              log.severe("Unexpected error : " + Util.fmtEx(e))
-              None
-          }
+    managed(new ManagedChannel) acquireAndGet { manChan =>
+      {
+        try {
+          Some(func(manChan.channel))
+        } catch {
+          case e: Exception =>
+            log.severe("Unexpected error : " + Util.fmtEx(e))
+            None
         }
+      }
     }
   }
 
   /**
-   * Declare a durable queue from which to read messages.  Ignore errors
-   * in case it is already declared.
-   */
+    * Declare a durable queue from which to read messages.  Ignore errors
+    * in case it is already declared.
+    */
   private def queueDeclareDurable(queueName: String): Unit = {
-    def qd(channel: Channel) = {
+    def qd(channel: Channel): Unit = {
       val durable = true
       val exclusive = false
       val autoDelete = false
       val arguments = null
-      val queueOk = channel.queueDeclare(queueName, durable, exclusive, autoDelete, arguments)
+      channel.queueDeclare(queueName, durable, exclusive, autoDelete, arguments)
     }
     performSafelyUsingChannel(qd)
   }
 
   /**
-   * Bind a queue to the standard EventNet exchange using the given routing key.
-   */
+    * Bind a queue to the standard EventNet exchange using the given routing key.
+    */
   private def queueBindApplication(queueName: String, routingKey: String): Unit = {
     performSafelyUsingChannel(channel => channel.queueBind(queueName, config.Exchange, routingKey))
   }
 
   private def makeAmqpConnection: Connection = {
     try {
-      val fctry = new ConnectionFactory
+      val factory = new ConnectionFactory
       log.fine("Constructing AMQP connection RabbitMQ broker at " + config.Broker + ":" + config.Port)
-      fctry.setHost(config.Broker)
-      fctry.setPort(config.Port)
-      val cnct = fctry.newConnection
+      factory.setHost(config.Broker)
+      factory.setPort(config.Port)
+      val connection = factory.newConnection
       log.info("Connection with RabbitMQ broker established")
-      cnct
+      connection
     } catch {
-      case e: Exception => {
+      case e: Exception =>
         log.severe("Unable to connect with RabbitMQ broker at " + config.Broker + ":" + config.Port + " : " + Util.fmtEx(e))
         null
-      }
     }
   }
 
@@ -105,33 +98,31 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
       try {
         connection.createChannel
       } catch {
-        case e: Exception => {
+        case e: Exception =>
           log.severe("Unable to create AMQP channel: " + Util.fmtEx(e))
           null
-        }
       }
     }
   }
 
-  private def put(channel: Channel) = {
-    if ((channel != null) && channel.isOpen()) channelList.put(channel)
+  private def put(channel: Channel): Unit = {
+    if ((channel != null) && channel.isOpen) channelList.put(channel)
     else channelList.put(createChannel)
   }
 
   private def take: Channel = {
     channelList.poll match {
-      case channel: Channel if (channel.isOpen) => channel
-      case channel: Channel if (!channel.isOpen) => createChannel
-      case _ => {
+      case channel: Channel if channel.isOpen  => channel
+      case channel: Channel if !channel.isOpen => createChannel
+      case _ =>
         log.severe("Internal error.  Unable to get AMQP channel.  Maximum number " + channelLimit + " have already been used")
         null
-      }
     }
   }
 
   private def establishDurable(queueName: String, routingKey: String): Unit = {
     establishedList.synchronized {
-      val qk = new QueueNameRoutingKeyPair(queueName, routingKey)
+      val qk = QueueNameRoutingKeyPair(queueName, routingKey)
       if (!establishedList.contains(qk)) {
         establishedList.add(qk)
         log.info("Establishing queue " + queueName + " with routing key " + routingKey)
@@ -141,29 +132,29 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
     }
   }
 
-  private def delayBeforeResuming = Thread.sleep(restartDelayMs)
+  private def delayBeforeResuming(): Unit = Thread.sleep(restartDelayMs)
 
   /**
-   * Create the QueueingConsumer and execute the application's event processor in a loop.
-   *
-   * Isolate exceptions from the application processing from exceptions from the AMQP calls.
-   *
-   * If <code>processing</code> throws an exception, mark the incoming message as
-   * not-acknowledged and re-queue it. 
-   */
-  private def consumeLoop(channel: Channel, queueName: String, processing: Array[Byte] => Unit) = {
-    val consumer = new DefaultConsumer(channel)
+    * Create the QueueingConsumer and execute the application's event processor in a loop.
+    *
+    * Isolate exceptions from the application processing from exceptions from the AMQP calls.
+    *
+    * If <code>processing</code> throws an exception, mark the incoming message as
+    * not-acknowledged and re-queue it.
+    */
+  private def consumeLoop(channel: Channel, queueName: String, processing: Array[Byte] => Unit): Unit = {
+    // val consumer = new DefaultConsumer(channel)
     val multiple = false
     val requeue = true
     val autoAck = false
 
-    def fail(deliveryTag: Long) = {
+    def fail(deliveryTag: Long): Unit = {
       channel.basicNack(deliveryTag, multiple, requeue)
-      delayBeforeResuming
+      delayBeforeResuming()
     }
 
-    class Deliver extends DeliverCallback {
-      def handle(consumerTag: String, message: Delivery) = {
+    val deliver = new DeliverCallback {
+      override def handle(consumerTag: String, message: Delivery): Unit = {
         val data = message.getBody
         val deliveryTag = message.getEnvelope.getDeliveryTag
 
@@ -171,22 +162,21 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
           processing(data)
           channel.basicAck(deliveryTag, multiple)
         } catch {
-          case t: Throwable => {
+          case t: Throwable =>
             log.severe("Unexpected application error : " + Util.fmtEx(t))
             fail(deliveryTag)
-          }
         }
       }
     }
 
-    class Cancel extends CancelCallback {
-      def handle(consumerTag: String) = {
+    val cancel = new CancelCallback {
+      override def handle(consumerTag: String): Unit = {
         log.severe("Unexpected cancel of AMQP message for queue " + queueName)
       }
 
     }
 
-    channel.basicConsume(queueName, autoAck, new Deliver, new Cancel)
+    channel.basicConsume(queueName, autoAck, deliver, cancel)
 
     /* TODO In the event that this is used before being properly implemented, this code is a
      * safeguard to prevent going into an infinite loop and consuming lots of CPU.  This
@@ -199,24 +189,23 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
   }
 
   private class RunLoop(queueName: String, processing: Array[Byte] => Unit) extends Runnable {
-    def run: Unit = {
+    def run(): Unit = {
       while (true) {
         try {
-          managed(new ManagedChannel) acquireAndGet {
-            manChan =>
-              {
-                consumeLoop(manChan.channel, queueName, processing)
-              }
+          managed(new ManagedChannel) acquireAndGet { manChan =>
+            {
+              consumeLoop(manChan.channel, queueName, processing)
+            }
           }
         } catch {
           // Only catch AMQP errors (originating in this class), not application errors.
           case e: Exception =>
             log.severe("Unexpected AMQP error : " + Util.fmtEx(e))
-            delayBeforeResuming
+            delayBeforeResuming()
         }
       }
     }
-    (new Thread(this)).start
+    new Thread(this).start()
   }
 
   def consumeDurable(queueName: String, exchange: String, routingKey: String, processing: Array[Byte] => Unit): Unit = {
@@ -239,6 +228,6 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
   // Make a finite number of channels that is more than what will be needed for the life of
   // the service.  If there is a problem with not returning them when finished, then this
   // service will fail instead of affecting the AMQP broker.
-  (1 to channelLimit).map(c => channelList.put(createChannel))
+  (1 to channelLimit).foreach(_ => channelList.put(createChannel))
 
 }

@@ -4,8 +4,6 @@ import com.rabbitmq.client.{CancelCallback, ConnectionFactory, DeliverCallback, 
 
 import java.nio.charset.StandardCharsets
 // import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent._
 
 object RabbitBasicTest {
 
@@ -32,17 +30,17 @@ object RabbitBasicTest {
         (1 until 10).foreach(count => {
           val message = " hello there " + count
           channel.basicPublish("", QUEUE_NAME, null, message.getBytes(StandardCharsets.UTF_8))
-          System.out.println(elapsed + " [x] Sent '" + message + "'")
-          Thread.sleep(500)
+          System.out.println("sent: " + elapsed + " : " + message)
+          Thread.sleep(250)
         })
       } finally {
         if (connection != null) connection.close()
-        if (channel != null) channel.close()
+        println("connection.isOpen: " + connection.isOpen)
+        // if (channel != null) channel.close()
       }
     }
     System.out.println("send is done.")
   }
-
 
   private def receive(): Unit = {
     val factory = new ConnectionFactory
@@ -53,11 +51,13 @@ object RabbitBasicTest {
     channel.queueDeclare(QUEUE_NAME, false, false, false, null)
     System.out.println(" [*] Waiting for messages. To exit press CTRL+C")
 
-
+    var count = 0
     val deliverCallback = new DeliverCallback {
       override def handle(s: String, delivery: Delivery): Unit = {
+        count = count + 1
         val message = new String(delivery.getBody)
-        println(elapsed + " deliverCallback message: " + message)
+        println("received " + elapsed + " : " + count.formatted("%3d") + "  message: " + message)
+        channel.basicAck(delivery.getEnvelope.getDeliveryTag, false)
       }
     }
 
@@ -71,15 +71,24 @@ object RabbitBasicTest {
   def main(args: Array[String]): Unit = {
     println("Starting...")
 
-    val receiver = Future {
+    /*
+    val future = Future {
       receive()
     }
+     */
+
+    class Later() extends Runnable {
+      override def run(): Unit = receive()
+
+      new Thread(this).start()
+    }
+    new Later
 
     send()
 
     Thread.sleep(500)
     println("Done.  Exiting...")
 
-    System.exit(0)  // aborts channel in an ugly way, but this works
+    System.exit(0) // aborts channel in an ugly way, but this works
   }
 }
