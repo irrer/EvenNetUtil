@@ -55,8 +55,8 @@ class EventNetClient(val config: EventNetClientConfig, serviceName: String, chan
     eventUtil.sendAdminEvent(errorEvent)
   }
 
-  def consumeDurable(queueName: String, exchange: String, routingKey: String, processing: Array[Byte] => Unit): Unit =
-    eventUtil.consumeDurable(queueName, exchange, routingKey, processing)
+  def consumeDurable(queueName: String, routingKey: String, processing: Array[Byte] => Unit): Unit =
+    eventUtil.consumeDurable(queueName, routingKey, processing)
 
   def consumeNonDurable(exchange: String, routingKey: String, processing: Array[Byte] => Unit): Unit =
     eventUtil.consumeNonDurable(exchange, routingKey, processing)
@@ -104,7 +104,7 @@ object EventNetClient {
       println("procEventPlanApproval received:\n" + new String(message))
     }
 
-    enc.consumeDurable("Aria.Event.MobiusControl", config.Exchange, "Aria.Event.EventPlanApproval", procEventPlanApproval)
+    enc.consumeDurable("Aria.Event.MobiusControl", "Aria.Event.EventPlanApproval", procEventPlanApproval)
 
     println("Sleeping ...")
     val stopTime = System.currentTimeMillis + (1 * 60 * 1000)

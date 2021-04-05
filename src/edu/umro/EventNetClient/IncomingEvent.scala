@@ -13,6 +13,7 @@ abstract class IncomingEvent(text: String) extends Event {
     "NA"
   }
 
+  //noinspection SameParameterValue
   protected def doc(name: String): String =
     try { (doc \ name).head.text }
     catch { case e: Exception => docError(name, e) }

@@ -6,9 +6,9 @@ class StopEvent(Status: String, inResponseTo: String, agentIdentification: Agent
 
   override val xml: Elem = {
     <StopEvent xmlns="urn:StopEvent">
-            <Status>{Status}</Status>
-            {header.xml}
-        </StopEvent>
+      <Status>{Status}</Status>
+      {header.xml}
+    </StopEvent>
   }
 
 }

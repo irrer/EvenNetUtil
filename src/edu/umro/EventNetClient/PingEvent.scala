@@ -8,9 +8,9 @@ class PingEvent(text: String) extends IncomingEvent(text) {
 
   override val xml: Elem = {
     <PingEvent xmlns="urn:PingEvent">
-            <Status>{Status}</Status>
-            {header.xml}
-        </PingEvent>
+      <Status>{Status}</Status>
+      {header.xml}
+    </PingEvent>
   }
 
 }

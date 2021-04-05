@@ -179,7 +179,7 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
     channel.basicConsume(queueName, autoAck, deliver, cancel)
   }
 
-  private def consume(queueName: String, processing: Array[Byte] => Unit) = {
+  private def consume(queueName: String, processing: Array[Byte] => Unit): Unit = {
     try {
       val manChan = new ManagedChannel
       consumeLoop(manChan.channel, queueName, processing)
@@ -190,7 +190,7 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
     }
   }
 
-  def consumeDurable(queueName: String, exchange: String, routingKey: String, processing: Array[Byte] => Unit): Unit = {
+  def consumeDurable(queueName: String, routingKey: String, processing: Array[Byte] => Unit): Unit = {
     establishDurable(queueName, routingKey)
     consume(queueName, processing)
   }

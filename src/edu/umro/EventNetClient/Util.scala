@@ -23,7 +23,7 @@ object Util {
     * @return Human readable version of <code>Throwable</code> and stack trace.
     */
   def fmtEx(throwable: Throwable): String = {
-    throwable.getStackTrace.toList.foldLeft("")((text, stkElem) => "\n    " + stkElem)
+    throwable.getStackTrace.toList.foldLeft("")((_, stkElem) => "\n    " + stkElem)
   }
 
   //noinspection SpellCheckingInspection

@@ -6,9 +6,9 @@ class StartEvent(Status: String, agentIdentification: AgentIdentification) exten
 
   override val xml: Elem = {
     <StartEvent xmlns="urn:StartEvent">
-            <Status>{Status}</Status>
-            {header.xml}
-        </StartEvent>
+      <Status>{Status}</Status>
+      {header.xml}
+    </StartEvent>
   }
 
 }

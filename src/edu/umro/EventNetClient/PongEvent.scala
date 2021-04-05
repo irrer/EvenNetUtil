@@ -6,9 +6,9 @@ class PongEvent(Status: String, inResponseTo: String, agentIdentification: Agent
 
   override val xml: Elem = {
     <PongEvent xmlns="urn:PongEvent">
-            <Status>{Status}</Status>
-            {header.xml}
-        </PongEvent>
+      <Status>{Status}</Status>
+      {header.xml}
+    </PongEvent>
   }
 
 }

@@ -7,13 +7,13 @@ class ErrorEvent(val Context: String, val ShortExceptionInfo: String, val Servic
 
   override val xml: Elem = {
     <ErrorEvent xmlns="urn:ErrorEvent">
-            <Context>{Context}</Context>
-            <ShortExceptionInfo>{ShortExceptionInfo}</ShortExceptionInfo>
-            <ServiceNameInError>{ServiceNameInError}</ServiceNameInError>
-            <ServiceIdInError>{ServiceIdInError}</ServiceIdInError>
-            <ExceptionInfo>{ExceptionInfo}</ExceptionInfo>
-            {header.xml}
-        </ErrorEvent>
+      <Context>{Context}</Context>
+      <ShortExceptionInfo>{ShortExceptionInfo}</ShortExceptionInfo>
+      <ServiceNameInError>{ServiceNameInError}</ServiceNameInError>
+      <ServiceIdInError>{ServiceIdInError}</ServiceIdInError>
+      <ExceptionInfo>{ExceptionInfo}</ExceptionInfo>
+      {header.xml}
+    </ErrorEvent>
   }
 
 }
