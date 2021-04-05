@@ -66,6 +66,7 @@ object RabbitBasicTest {
     }
 
     channel.basicConsume(QUEUE_NAME, false, deliverCallback, cancelCallback)
+    println("after basicConsume")
   }
 
   def main(args: Array[String]): Unit = {
@@ -77,13 +78,15 @@ object RabbitBasicTest {
     }
      */
 
-    class Later() extends Runnable {
-      override def run(): Unit = receive()
+    if (false) {
+      class Later() extends Runnable {
+        override def run(): Unit = receive()
 
-      new Thread(this).start()
+        new Thread(this).start()
+      }
+      new Later
     }
-    new Later
-
+    receive()
     send()
 
     Thread.sleep(500)

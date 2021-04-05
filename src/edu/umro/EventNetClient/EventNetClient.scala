@@ -77,7 +77,6 @@ class EventNetClient(val config: EventNetClientConfig, serviceName: String, chan
 
   // Create the common EventNet exchange.  If it already exists, then this will have no effect.
   eventUtil.performSafelyUsingChannel(channel => channel.exchangeDeclare(config.AdminExchange, EventNetExchangeType, true))
-  eventUtil.performSafelyUsingChannel(channel => channel.exchangeDeclare(config.AdminExchange, EventNetExchangeType, true))
 
   initClient()
 }

@@ -90,13 +90,13 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
   }
 
   /** The single connection that is used by all channels. */
-  private var connection: Connection = null
+  private var connection: Option[Connection] = None
 
   private def createChannel: Channel = {
     this.synchronized {
-      if ((connection == null) || (!connection.isOpen)) connection = makeAmqpConnection
+      if (connection.isEmpty || (!connection.get.isOpen)) connection = Some(makeAmqpConnection)
       try {
-        connection.createChannel
+        connection.get.createChannel
       } catch {
         case e: Exception =>
           log.severe("Unable to create AMQP channel: " + Util.fmtEx(e))
@@ -177,40 +177,22 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
     }
 
     channel.basicConsume(queueName, autoAck, deliver, cancel)
-
-    /* TODO In the event that this is used before being properly implemented, this code is a
-     * safeguard to prevent going into an infinite loop and consuming lots of CPU.  This
-     * should be removed when the code is made to work.
-     */
-    if (true) {
-      println("the consumeLoop " + System.currentTimeMillis())
-      Thread.sleep(1000)
-    }
   }
 
-  private class RunLoop(queueName: String, processing: Array[Byte] => Unit) extends Runnable {
-    def run(): Unit = {
-      while (true) {
-        try {
-          managed(new ManagedChannel) acquireAndGet { manChan =>
-            {
-              consumeLoop(manChan.channel, queueName, processing)
-            }
-          }
-        } catch {
-          // Only catch AMQP errors (originating in this class), not application errors.
-          case e: Exception =>
-            log.severe("Unexpected AMQP error : " + Util.fmtEx(e))
-            delayBeforeResuming()
-        }
-      }
+  private def consume(queueName: String, processing: Array[Byte] => Unit) = {
+    try {
+      val manChan = new ManagedChannel
+      consumeLoop(manChan.channel, queueName, processing)
+    } catch {
+      // Only catch AMQP errors (originating in this class), not application errors.
+      case e: Exception =>
+        log.severe("Unexpected AMQP error while consuming: " + Util.fmtEx(e))
     }
-    new Thread(this).start()
   }
 
   def consumeDurable(queueName: String, exchange: String, routingKey: String, processing: Array[Byte] => Unit): Unit = {
     establishDurable(queueName, routingKey)
-    new RunLoop(queueName, processing)
+    consume(queueName, processing)
   }
 
   def consumeNonDurable(exchange: String, routingKey: String, processing: Array[Byte] => Unit): Unit = {
@@ -222,7 +204,7 @@ class EventUtil(config: EventNetClientConfig, channelLimit: Int, restartDelayMs:
     val queueName = performSafelyUsingChannel(bindToNonDurableQueue)
 
     if (queueName.isDefined)
-      new RunLoop(queueName.get, processing)
+      consume(queueName.get, processing)
   }
 
   // Make a finite number of channels that is more than what will be needed for the life of
