@@ -39,7 +39,13 @@ object Util {
     * @return Human readable version of <code>Throwable</code> and stack trace.
     */
   def fmtEx(throwable: Throwable): String = {
-    throwable.getStackTrace.toList.foldLeft("")((_, stkElem) => "\n    " + stkElem)
+    val msg = {
+      if (throwable.getMessage == null)
+        ""
+      else { " : " + throwable.getMessage }
+    }
+    val text = throwable + msg + "\n    " + throwable.getStackTrace.toList.mkString("\n    ")
+    text
   }
 
   //noinspection SpellCheckingInspection

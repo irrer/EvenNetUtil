@@ -54,16 +54,19 @@ object EventNetClientConfig {
   }
 
   def construct: EventNetClientConfig = {
-    try {
-      constructFromWindowsMachineFile(new File(WindowsMachineConfigFileName))
-    } catch {
-      case e: Exception =>
-        log.warning(
-          "Unable to construct EventNet configuration from standard Windows file " +
-            WindowsMachineConfigFileName + " so instead using default hard-coded configuration.  Error: " + e
-        )
-        constructDefault
+    val conf = {
+      try {
+        constructFromWindowsMachineFile(new File(WindowsMachineConfigFileName))
+      } catch {
+        case e: Exception =>
+          log.warning(
+            "Unable to construct EventNet configuration from standard Windows file " +
+              WindowsMachineConfigFileName + " so instead using default hard-coded configuration.  Error: " + e
+          )
+          constructDefault
+      }
     }
+    conf
   }
 
   /**
