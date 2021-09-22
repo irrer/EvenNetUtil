@@ -44,7 +44,7 @@ object Util {
         ""
       else { " : " + throwable.getMessage }
     }
-    val text = throwable + msg + "\n    " + throwable.getStackTrace.toList.mkString("\n    ")
+    val text = throwable + "\n    " + throwable.getStackTrace.toList.mkString("\n    ")
     text
   }
 
