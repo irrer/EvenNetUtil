@@ -16,7 +16,8 @@
 
 package edu.umro.EventNetClient
 
-import scala.xml.{Elem, XML}
+import scala.xml.Elem
+import scala.xml.XML
 
 abstract class IncomingEvent(text: String) extends Event {
 

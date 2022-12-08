@@ -16,9 +16,12 @@
 
 package edu.umro.EventNetClient
 
-import java.text.{ParseException, SimpleDateFormat}
-import java.util.{Date, UUID}
-import scala.xml.{Elem, PrettyPrinter}
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.UUID
+import scala.xml.Elem
+import scala.xml.PrettyPrinter
 
 /**
   * Common utilities for API.

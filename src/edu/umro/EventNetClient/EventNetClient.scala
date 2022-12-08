@@ -45,7 +45,7 @@ class EventNetClient(val config: EventNetClientConfig, serviceName: String, chan
   private def initClient(): Unit = {
     val startEvent = new StartEvent("Starting agent " + serviceName, agentIdentification)
     log.info("startEvent:\n" + startEvent)
-    def setupShutdown() {
+    def setupShutdown() = {
       class Shutdown extends Runnable {
         override def run(): Unit = {
           val stopEvent = new StopEvent("shutdown", startEvent.header.EventId, agentIdentification)

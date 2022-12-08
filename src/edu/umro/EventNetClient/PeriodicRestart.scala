@@ -17,7 +17,9 @@
 package edu.umro.EventNetClient
 
 import java.util.logging.Logger
-import java.util.{Calendar, Date, GregorianCalendar}
+import java.util.Calendar
+import java.util.Date
+import java.util.GregorianCalendar
 
 class PeriodicRestart(RestartTime: Long) extends Runnable {
   private val log = Logger.getLogger(this.getClass.getName)

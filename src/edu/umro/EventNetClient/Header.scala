@@ -19,7 +19,8 @@ package edu.umro.EventNetClient
 import edu.umro.util.OpSys
 
 import java.util.Date
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.Elem
+import scala.xml.NodeSeq
 
 class Header(
     val AgentId: String,
